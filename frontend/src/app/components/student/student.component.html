@@ -1,0 +1,152 @@
+<div class="dashboard-layout">
+    <aside class="sidebar slide-right">
+        <div class="brand">
+            <h2>Institutional Hub</h2>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="user-profile mb-4">
+                <div class="avatar student-avatar">{{ user?.name?.charAt(0) }}</div>
+                <div class="user-info">
+                    <h4>{{ user?.name }}</h4>
+                    <span class="badge badge-student">Student</span>
+                    <br><small class="text-muted" style="font-size: 0.75rem;">Roll: {{user?.rollNo}}</small>
+                </div>
+            </div>
+
+            <button class="nav-item" [class.active]="activeTab === 'my-documents'" (click)="activeTab = 'my-documents'">
+                My Documents
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'upload'" (click)="activeTab = 'upload'">
+                Upload Document
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'notifications'"
+                (click)="activeTab = 'notifications'">
+                Notifications
+                <span class="badge badge-danger" style="margin-left:auto; float:right"
+                    *ngIf="notifications.length">{{notifications.length}}</span>
+            </button>
+
+            <div class="spacer"></div>
+            <button class="nav-item text-danger" (click)="logout()">
+                Logout
+            </button>
+        </nav>
+    </aside>
+
+    <main class="main-content fade-in">
+        <header class="top-nav">
+            <h2>Student Portal</h2>
+        </header>
+
+        <div class="content-wrapper">
+
+            <!-- MY DOCUMENTS TAB -->
+            <div *ngIf="activeTab === 'my-documents'" class="card glass-card fade-in">
+                <h3>My Uploaded Documents</h3>
+                <p class="text-muted mb-4">View your previously uploaded files and remarks from staff.</p>
+
+                <div class="table-responsive">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>File Name</th>
+                                <th>Date Uploaded</th>
+                                <th>Status</th>
+                                <th>Staff Remark (If Any)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let doc of documents">
+                                <td><strong>{{ doc.title }}</strong></td>
+                                <td>{{ doc.originalFileName }}</td>
+                                <td>{{ doc.uploadDate | date:'medium' }}</td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="{'badge-warning': doc.status === 'PENDING', 'badge-success': doc.status === 'APPROVED', 'badge-danger': doc.status === 'REJECTED'}">
+                                        {{ doc.status }}
+                                    </span>
+                                </td>
+                                <td class="text-muted"><em>Staff review feature handles remarks.</em></td>
+                                <td>
+                                    <button class="btn-sm premium-button"
+                                        (click)="download(doc.id, doc.originalFileName)">Download</button>
+                                    <button class="btn-sm premium-button"
+                                        style="background-color: #3b82f6; margin-left: 0.5rem;"
+                                        (click)="preview(doc.id, doc.originalFileName)">Preview</button>
+                                    <button class="btn-sm premium-button"
+                                        style="background-color: #ef4444; margin-left: 0.5rem;"
+                                        (click)="deleteDoc(doc.id)">Delete</button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="documents.length === 0">
+                                <td colspan="6" class="text-center">You haven't uploaded any documents yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- UPLOAD TAB -->
+            <div *ngIf="activeTab === 'upload'" class="card glass-card fade-in" style="max-width: 600px;">
+                <h3>Upload Required Documents</h3>
+                <p class="text-muted mb-4">Submit certificates, assignments, or institution-required files securely.</p>
+
+                <div class="alert alert-info mb-4" *ngIf="uploadMessage">{{ uploadMessage }}</div>
+
+                <div *ngIf="getMissingDocuments().length === 0" class="alert alert-success mt-4"
+                    style="color: #065f46; background-color: #d1fae5; border: 1px solid #34d399; border-radius: 0.5rem; padding: 1rem;">
+                    <strong>Excellent!</strong> You have successfully uploaded all mandatory documents required for your
+                    profile ({{ user?.caste || 'Registered Caste' }}).
+                </div>
+
+                <form *ngIf="getMissingDocuments().length > 0" (ngSubmit)="uf.form.valid && uploadDocument()"
+                    #uf="ngForm">
+                    <div class="form-group">
+                        <label>Select Required Document Type</label>
+                        <select class="form-control premium-input" name="title" [(ngModel)]="uploadForm.title" required>
+                            <option value="" disabled selected>Select Missing Document...</option>
+                            <option *ngFor="let docType of getMissingDocuments()" [value]="docType">{{ docType }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <label>Select File</label>
+                        <input type="file" class="form-control premium-input" style="padding: 1rem"
+                            (change)="onFileChange($event)" required>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn-primary premium-button"
+                            [disabled]="!uf.form.valid || !uploadForm.file || isUploading">
+                            {{ isUploading ? 'Uploading...' : 'Upload Securely' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- NOTIFICATIONS TAB -->
+            <div *ngIf="activeTab === 'notifications'" class="card glass-card fade-in">
+                <h3>Inbox & Alerts</h3>
+
+                <div class="notification-list mt-4">
+                    <div *ngFor="let note of notifications" class="alert"
+                        [ngClass]="note.read ? 'alert-secondary' : 'alert-primary'"
+                        style="display:flex; justify-content:space-between; align-items:center; padding: 1rem; border: 1px solid #e2e8f0; margin-bottom: 0.5rem; border-radius: 0.5rem;">
+                        <div>
+                            <p style="margin:0; font-weight: 500;">{{ note.message }}</p>
+                            <small class="text-muted">{{ note.createdAt | date:'short' }}</small>
+                        </div>
+                        <button class="btn-sm premium-button" *ngIf="!note.read" (click)="markRead(note.id)">Mark
+                            Read</button>
+                    </div>
+                    <p *ngIf="notifications.length === 0" class="text-center">No notifications.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>

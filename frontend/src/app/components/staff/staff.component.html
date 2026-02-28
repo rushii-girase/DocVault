@@ -1,0 +1,256 @@
+<div class="dashboard-layout">
+    <aside class="sidebar slide-right">
+        <div class="brand">
+            <h2>Institutional Hub</h2>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="user-profile mb-4">
+                <div class="avatar staff-avatar">{{ user?.name?.charAt(0) }}</div>
+                <div class="user-info">
+                    <h4>{{ user?.name }}</h4>
+                    <span class="badge badge-staff">Staff Member</span>
+                </div>
+            </div>
+
+            <button class="nav-item" [class.active]="activeTab === 'students'" (click)="activeTab = 'students'">
+                Students Directory
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">
+                Student Documents
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'notifications'"
+                (click)="activeTab = 'notifications'">
+                Notifications
+                <span class="badge badge-danger" style="margin-left:auto; float:right"
+                    *ngIf="notifications.length">{{notifications.length}}</span>
+            </button>
+
+            <div class="spacer"></div>
+            <button class="nav-item text-danger" (click)="logout()">
+                Logout
+            </button>
+        </nav>
+    </aside>
+
+    <main class="main-content fade-in">
+        <header class="top-nav">
+            <h2>Staff Operations</h2>
+        </header>
+
+        <div class="content-wrapper">
+
+            <!-- STUDENTS DIRECTORY TAB -->
+            <div *ngIf="activeTab === 'students'" class="card glass-card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h3>Enrolled Students Directory</h3>
+                        <p class="text-muted mb-0">View all registered students and their details.</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="text" class="form-control premium-input" style="width: 300px; padding: 0.5rem;"
+                            placeholder="Search by Name, Email, or Roll No..." [(ngModel)]="searchQuery">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Roll No</th>
+                                <th>Class & Div</th>
+                                <th>College</th>
+                                <th>Course</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Caste</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let student of filteredStudents">
+                                <td><strong>{{ student.name }}</strong></td>
+                                <td>{{ student.rollNo || 'N/A' }}</td>
+                                <td>{{ student.classLevel || 'N/A' }}<span *ngIf="student.division"> - {{
+                                        student.division }}</span></td>
+                                <td>{{ student.collegeName || 'N/A' }}</td>
+                                <td>{{ student.course || 'N/A' }}</td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.mobileNo || 'N/A' }}</td>
+                                <td><span class="badge badge-secondary">{{ student.caste || 'N/A' }}</span></td>
+                            </tr>
+                            <tr *ngIf="filteredStudents.length === 0">
+                                <td colspan="8" class="text-center">No students match your search criteria.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS TAB -->
+            <div *ngIf="activeTab === 'documents'" class="card glass-card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h3>Pending Document Reviews</h3>
+                        <p class="text-muted mb-0">Review and verify student uploads.</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="text" class="form-control premium-input" style="width: 250px; padding: 0.5rem;"
+                                placeholder="Search Name, Email, or Roll No..." [(ngModel)]="documentSearchQuery">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <label style="margin: 0; font-weight: 500; white-space: nowrap;">Filter Status:</label>
+                                <select class="form-control premium-input" style="width: 150px; padding: 0.5rem;"
+                                    [(ngModel)]="statusFilter">
+                                    <option value="ALL">All Documents</option>
+                                    <option value="PENDING">Pending Review</option>
+                                    <option value="APPROVED">Approved</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive" *ngIf="!selectedStudentView">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Roll No & Course</th>
+                                <th>Documents Count</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let group of groupedStudents">
+                                <td>
+                                    <strong>{{ group.student.name }}</strong>
+                                    <!-- Red Dot Indicator -->
+                                    <span *ngIf="group.hasUpdates" title="Student made changes (Pending Reviews)"
+                                        style="display: inline-block; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; margin-left: 0.5rem; box-shadow: 0 0 5px #ef4444;"></span>
+                                </td>
+                                <td>
+                                    {{ group.student.rollNo }}<br>
+                                    <small class="text-muted">{{ group.student.collegeName }} ({{ group.student.course
+                                        }})</small>
+                                </td>
+                                <td>{{ group.documents.length }} uploaded</td>
+                                <td>
+                                    <button class="btn-sm premium-button" (click)="viewStudent(group)"
+                                        style="background: #3b82f6">View Student Docs</button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="groupedStudents.length === 0">
+                                <td colspan="4" class="text-center">No students found matching this filter.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="student-details fade-in" *ngIf="selectedStudentView">
+                    <div style="margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+                        <button class="btn-sm premium-button mb-2" (click)="closeStudentView()"
+                            style="background: #6b7280">&larr; Back to Student List</button>
+                        <h4 style="margin-top: 0.5rem;">Documents for {{ selectedStudentView.student.name }}</h4>
+                        <p class="text-muted mb-0">{{ selectedStudentView.student.collegeName }} - {{
+                            selectedStudentView.student.course }}</p>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>File Content</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let doc of selectedStudentView.documents">
+                                    <td><strong>{{ doc.title }}</strong></td>
+                                    <td>
+                                        <button class="btn-sm premium-button"
+                                            (click)="download(doc.id, doc.originalFileName)">Download</button>
+                                        <button class="btn-sm premium-button"
+                                            style="background-color: #3b82f6; margin-left: 0.5rem;"
+                                            (click)="preview(doc.id, doc.originalFileName)">Preview</button>
+                                    </td>
+                                    <td>
+                                        <span class="badge"
+                                            [ngClass]="{'badge-warning': doc.status === 'PENDING', 'badge-success': doc.status === 'APPROVED', 'badge-danger': doc.status === 'REJECTED'}">
+                                            {{ doc.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-sm premium-button" (click)="openReviewModal(doc)"
+                                            style="background: #10b981">Review</button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="selectedStudentView.documents.length === 0">
+                                    <td colspan="4" class="text-center">No documents found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOTIFICATIONS TAB -->
+            <div *ngIf="activeTab === 'notifications'" class="card glass-card fade-in">
+                <h3>System Notifications</h3>
+
+                <div class="notification-list mt-4">
+                    <div *ngFor="let note of notifications" class="alert"
+                        [ngClass]="note.read ? 'alert-secondary' : 'alert-primary'"
+                        style="display:flex; justify-content:space-between; align-items:center; padding: 1rem; border: 1px solid #e2e8f0; margin-bottom: 0.5rem; border-radius: 0.5rem;">
+                        <div>
+                            <p style="margin:0; font-weight: 500;">{{ note.message }}</p>
+                            <small class="text-muted">{{ note.createdAt | date:'short' }}</small>
+                        </div>
+                        <button class="btn-sm premium-button" *ngIf="!note.read" (click)="markRead(note.id)">Mark
+                            Read</button>
+                    </div>
+                    <p *ngIf="notifications.length === 0" class="text-center">All caught up!</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Review Modal Overlay -->
+<div class="modal-overlay" *ngIf="reviewModalOpen">
+    <div class="glass-card modal-content fade-in">
+        <h3>Review Document</h3>
+        <p class="text-muted">Assessing: {{ selectedDoc?.title }} by {{ selectedDoc?.student?.name }}</p>
+
+        <div class="alert alert-info mt-4" *ngIf="reviewMessage">{{reviewMessage}}</div>
+
+        <form (ngSubmit)="submitReview()" class="mt-4 form-grid">
+            <div class="form-group full-width">
+                <label>Decision</label>
+                <select class="form-control premium-input" name="status" [(ngModel)]="reviewForm.status">
+                    <option value="APPROVED">Approve Document</option>
+                    <option value="REJECTED">Reject Document</option>
+                    <option value="PENDING">Mark Pending</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Staff Remark</label>
+                <textarea class="form-control premium-input" rows="4" name="remark" [(ngModel)]="reviewForm.remark"
+                    placeholder="Provide feedback to the student"></textarea>
+            </div>
+
+            <div class="form-group full-width" style="display: flex; gap: 1rem;">
+                <button type="submit" class="premium-button flex-1" style="width: 50%">Submit Review</button>
+                <button type="button" class="premium-button flex-1" style="width: 50%; background: #6b7280"
+                    (click)="closeReviewModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>

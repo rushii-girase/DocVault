@@ -1,0 +1,135 @@
+<div class="auth-wrapper">
+    <div class="glass-card full-width-card slide-up" *ngIf="!isSuccessful">
+        <div class="card-header">
+            <h2>Student Registration</h2>
+            <p>Create your institutional account.</p>
+        </div>
+
+        <form name="form" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
+            <div class="form-grid">
+
+                <!-- Personal Information -->
+                <div class="section-title">Personal Information</div>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" class="form-control premium-input" name="name" [(ngModel)]="form.name" required
+                        minlength="3" #name="ngModel" placeholder="John Doe">
+                    <div class="error-text" *ngIf="name.errors && f.submitted">
+                        <span *ngIf="name.errors['required']">Name is required</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control premium-input" name="email" [(ngModel)]="form.email"
+                        required email #email="ngModel" placeholder="johndoe@example.com">
+                    <div class="error-text" *ngIf="email.errors && f.submitted">
+                        <span *ngIf="email.errors['required']">Email is required</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control premium-input" name="password"
+                        [(ngModel)]="form.password" required minlength="6" #password="ngModel"
+                        placeholder="Min 6 characters">
+                    <div class="error-text" *ngIf="password.errors && f.submitted">
+                        <span *ngIf="password.errors['required']">Password is required</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mobileNo">Mobile Number</label>
+                    <input type="text" class="form-control premium-input" name="mobileNo" [(ngModel)]="form.mobileNo"
+                        required pattern="[0-9]{10}" #mobileNo="ngModel" placeholder="10 digit number">
+                    <div class="error-text" *ngIf="mobileNo.errors && f.submitted">
+                        <span *ngIf="mobileNo.errors['required']">Mobile No is required</span>
+                        <span *ngIf="mobileNo.errors['pattern']">Must be a valid 10-digit number</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="caste">Caste Category</label>
+                    <select class="form-control premium-input" name="caste" [(ngModel)]="form.caste" required
+                        #caste="ngModel">
+                        <option value="" disabled selected>Select Category</option>
+                        <option *ngFor="let c of castes" [value]="c">{{c}}</option>
+                    </select>
+                    <div class="error-text" *ngIf="caste.errors && f.submitted">
+                        <span *ngIf="caste.errors['required']">Caste is required</span>
+                    </div>
+                </div>
+
+                <!-- Academic Information -->
+                <div class="section-title" style="margin-top: 1rem;">Academic Details</div>
+
+                <div class="form-group full-width">
+                    <label for="collegeName">College Name</label>
+                    <select class="form-control premium-input" name="collegeName" [(ngModel)]="form.collegeName"
+                        (change)="onCollegeChange()" required #collegeName="ngModel">
+                        <option value="" disabled selected>Select College</option>
+                        <option *ngFor="let college of colleges" [value]="college">{{college}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <select class="form-control premium-input" name="course" [(ngModel)]="form.course" required
+                        #course="ngModel" [disabled]="!availableCourses.length">
+                        <option value="" disabled selected>Select Course</option>
+                        <option *ngFor="let c of availableCourses" [value]="c">{{c}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="classLevel">Class</label>
+                    <select class="form-control premium-input" name="classLevel" [(ngModel)]="form.classLevel" required
+                        #classLevel="ngModel">
+                        <option value="" disabled selected>Select Class</option>
+                        <option *ngFor="let cls of classes" [value]="cls">{{cls}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="division">Division</label>
+                    <input type="text" class="form-control premium-input" name="division" [(ngModel)]="form.division"
+                        placeholder="A, B, or C">
+                </div>
+
+                <div class="form-group">
+                    <label for="rollNo">Roll Number</label>
+                    <input type="text" class="form-control premium-input" name="rollNo" [(ngModel)]="form.rollNo"
+                        required #rollNo="ngModel" placeholder="e.g. 101">
+                </div>
+            </div>
+
+            <div class="form-group mt-6">
+                <button class="btn-primary premium-button" [disabled]="isLoading">
+                    <span *ngIf="isLoading" class="spinner"></span>
+                    <span *ngIf="!isLoading">Register Account</span>
+                </button>
+            </div>
+
+            <div class="alert alert-danger slide-down" *ngIf="f.submitted && isSignUpFailed">
+                {{ errorMessage }}
+            </div>
+
+            <div class="auth-links">
+                <p>Already have an account? <a routerLink="/login">Login here</a></p>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-card text-center slide-up" *ngIf="isSuccessful">
+        <div class="icon-circle icon-success">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <h3>Registration Successful!</h3>
+        <p class="mt-4 mb-4">Please check your email to verify your account before logging in.</p>
+        <a routerLink="/login" class="btn-primary premium-button mt-4"
+            style="text-decoration: none; display: inline-block;">Return to Login</a>
+    </div>
+</div>

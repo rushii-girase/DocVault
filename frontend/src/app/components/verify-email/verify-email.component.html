@@ -1,0 +1,31 @@
+<div class="auth-wrapper">
+    <div class="glass-card text-center slide-in">
+        <div *ngIf="isLoading" class="status-container">
+            <div class="loading-spinner"></div>
+            <h3 class="mt-4">Verifying your email...</h3>
+            <p>Please wait while we confirm your student account.</p>
+        </div>
+
+        <div *ngIf="isSuccessful" class="status-container success-anim">
+            <div class="icon-circle icon-success">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3>Email Verified!</h3>
+            <p class="success-text">{{ message }}</p>
+            <button class="btn-primary premium-button mt-4" (click)="goToLogin()">Proceed to Login</button>
+        </div>
+
+        <div *ngIf="isFailed" class="status-container error-anim">
+            <div class="icon-circle icon-error">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <h3>Verification Failed</h3>
+            <p class="error-text">{{ message }}</p>
+            <button class="btn-primary premium-button mt-4" (click)="goToLogin()">Back to Login</button>
+        </div>
+    </div>
+</div>

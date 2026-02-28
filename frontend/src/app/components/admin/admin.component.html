@@ -1,0 +1,333 @@
+<div class="dashboard-layout">
+    <aside class="sidebar slide-right">
+        <div class="brand">
+            <h2>Institutional Hub</h2>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="user-profile mb-4">
+                <div class="avatar admin-avatar">A</div>
+                <div class="user-info">
+                    <h4>{{ user?.name }}</h4>
+                    <span class="badge badge-admin">Administrator</span>
+                </div>
+            </div>
+
+            <button class="nav-item" [class.active]="activeTab === 'staff'" (click)="activeTab = 'staff'">
+                Register Staff
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'manage-staff'" (click)="activeTab = 'manage-staff'">
+                Manage Staff
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'audit'" (click)="activeTab = 'audit'">
+                Audit Logs
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'students'" (click)="activeTab = 'students'">
+                Students Directory
+            </button>
+            <button class="nav-item" [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">
+                All Documents
+            </button>
+
+            <div class="spacer"></div>
+            <button class="nav-item text-danger" (click)="logout()">
+                Logout
+            </button>
+        </nav>
+    </aside>
+
+    <main class="main-content fade-in">
+        <header class="top-nav">
+            <h2>Dashboard Overview</h2>
+        </header>
+
+        <div class="content-wrapper">
+
+            <!-- STAFF REGISTRATION TAB -->
+            <div *ngIf="activeTab === 'staff'" class="card glass-card fade-in">
+                <h3>Register New Staff Member</h3>
+                <p class="text-muted">Admins have exclusive rights to register new staff and assign them to colleges.
+                </p>
+
+                <form (ngSubmit)="sf.valid && registerStaff()" #sf="ngForm" class="mt-4 form-grid">
+                    <div class="form-group full-width" *ngIf="staffMessage">
+                        <div class="alert alert-info">{{ staffMessage }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" class="form-control premium-input" name="name" [(ngModel)]="staffForm.name"
+                            required #name="ngModel">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control premium-input" name="email"
+                            [(ngModel)]="staffForm.email" required email #email="ngModel">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control premium-input" name="password"
+                            [(ngModel)]="staffForm.password" required minlength="6" #password="ngModel">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <hr>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assigned College</label>
+                        <select class="form-control premium-input" name="collegeName"
+                            [(ngModel)]="staffForm.collegeName" (change)="onCollegeChange()">
+                            <option value="" disabled selected>Select College</option>
+                            <option *ngFor="let c of colleges" [value]="c">{{c}}</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assigned Course</label>
+                        <select class="form-control premium-input" name="course" [(ngModel)]="staffForm.course"
+                            [disabled]="!availableCourses.length">
+                            <option value="" disabled selected>Select Course</option>
+                            <option *ngFor="let c of availableCourses" [value]="c">{{c}}</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width mt-4">
+                        <button class="btn-primary premium-button" [disabled]="!sf.valid">Register Staff</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- MANAGE STAFF TAB -->
+            <div *ngIf="activeTab === 'manage-staff'" class="card glass-card fade-in">
+                <h3>Manage Existing Staff</h3>
+                <p class="text-muted mb-4">View staff details, block access, or completely remove them from the system.
+                </p>
+                <div class="table-responsive">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Name & Email</th>
+                                <th>Assigned College</th>
+                                <th>Course</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let staff of staffMembers">
+                                <td>
+                                    <strong>{{ staff.name }}</strong><br>
+                                    <small class="text-muted">{{ staff.email }}</small>
+                                </td>
+                                <td>{{ staff.collegeName || 'N/A' }}</td>
+                                <td>{{ staff.course || 'N/A' }}</td>
+                                <td>
+                                    <span class="badge" [ngClass]="staff.active ? 'badge-success' : 'badge-danger'">
+                                        {{ staff.active ? 'Active' : 'Blocked' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-sm premium-button"
+                                        [ngStyle]="{'background': staff.active ? '#f59e0b' : '#10b981', 'margin-right': '0.5rem'}"
+                                        (click)="toggleBlockStaff(staff.id)">
+                                        {{ staff.active ? 'Block' : 'Unblock' }}
+                                    </button>
+                                    <button class="btn-sm premium-button" style="background: #ef4444"
+                                        (click)="deleteStaff(staff.id)">Delete</button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="staffMembers.length === 0">
+                                <td colspan="5" class="text-center">No staff members found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AUDIT LOGS TAB -->
+            <div *ngIf="activeTab === 'audit'" class="card glass-card fade-in">
+                <h3>System Audit Logs</h3>
+                <p class="text-muted mb-4">Tracking all system uploads, downloads, and reviews.</p>
+
+                <div class="table-responsive">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Actor</th>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let log of auditLogs">
+                                <td>{{ log.actionDate | date:'medium' }}</td>
+                                <td><span class="badge badge-secondary">{{ log.actor.name }}</span></td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="{'badge-primary': log.actionType === 'UPLOAD', 'badge-success': log.actionType === 'DOWNLOAD', 'badge-warning': log.actionType === 'REVIEW'}">
+                                        {{ log.actionType }}
+                                    </span>
+                                </td>
+                                <td>{{ log.entityName }} #{{ log.entityId }}</td>
+                                <td>{{ log.details }}</td>
+                            </tr>
+                            <tr *ngIf="auditLogs.length === 0">
+                                <td colspan="5" class="text-center">No logs found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- STUDENTS DIRECTORY TAB -->
+            <div *ngIf="activeTab === 'students'" class="card glass-card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h3>Enrolled Students Directory</h3>
+                        <p class="text-muted mb-0">View all registered students and their details.</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="text" class="form-control premium-input" style="width: 300px; padding: 0.5rem;"
+                            placeholder="Search by Name, Email, or Roll No..." [(ngModel)]="searchQuery">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Roll No</th>
+                                <th>Class & Div</th>
+                                <th>College</th>
+                                <th>Course</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Caste</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let student of filteredStudents">
+                                <td><strong>{{ student.name }}</strong></td>
+                                <td>{{ student.rollNo || 'N/A' }}</td>
+                                <td>{{ student.classLevel || 'N/A' }}<span *ngIf="student.division"> - {{
+                                        student.division }}</span></td>
+                                <td>{{ student.collegeName || 'N/A' }}</td>
+                                <td>{{ student.course || 'N/A' }}</td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.mobileNo || 'N/A' }}</td>
+                                <td><span class="badge badge-secondary">{{ student.caste || 'N/A' }}</span></td>
+                            </tr>
+                            <tr *ngIf="filteredStudents.length === 0">
+                                <td colspan="8" class="text-center">No students match your search criteria.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ALL DOCUMENTS TAB -->
+            <div *ngIf="activeTab === 'documents'" class="card glass-card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>All Institutional Documents</h3>
+                    <div *ngIf="!selectedStudentView" style="display: flex; align-items: center;">
+                        <input type="text" class="form-control premium-input" style="width: 250px; padding: 0.5rem;"
+                            placeholder="Search Name, Email, or Roll No..." [(ngModel)]="documentSearchQuery">
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-4" *ngIf="!selectedStudentView">
+                    <table class="table premium-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Roll No & Course</th>
+                                <th>Documents Count</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let group of groupedStudents">
+                                <td>
+                                    <strong>{{ group.student.name }}</strong>
+                                    <!-- Red Dot Indicator -->
+                                    <span *ngIf="group.hasUpdates" title="Student made changes (Pending Reviews)"
+                                        style="display: inline-block; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; margin-left: 0.5rem; box-shadow: 0 0 5px #ef4444;"></span>
+                                </td>
+                                <td>
+                                    {{ group.student.rollNo }}<br>
+                                    <small class="text-muted">{{ group.student.collegeName }} ({{ group.student.course
+                                        }})</small>
+                                </td>
+                                <td>{{ group.documents.length }} uploaded</td>
+                                <td>
+                                    <button class="btn-sm premium-button" (click)="viewStudent(group)"
+                                        style="background: #3b82f6">View Student Docs</button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="groupedStudents.length === 0">
+                                <td colspan="4" class="text-center">No students found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="student-details fade-in mt-4" *ngIf="selectedStudentView">
+                    <div style="margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+                        <button class="btn-sm premium-button mb-2" (click)="closeStudentView()"
+                            style="background: #6b7280">&larr; Back to Student List</button>
+                        <h4 style="margin-top: 0.5rem;">Documents for {{ selectedStudentView.student.name }}</h4>
+                        <p class="text-muted mb-0">{{ selectedStudentView.student.collegeName }} - {{
+                            selectedStudentView.student.course }}</p>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>File Content</th>
+                                    <th>Date</th>
+                                    <th>Version</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let doc of selectedStudentView.documents">
+                                    <td><strong>{{ doc.title }}</strong></td>
+                                    <td>{{ doc.originalFileName }}</td>
+                                    <td>{{ doc.uploadDate | date:'short' }}</td>
+                                    <td>v{{ doc.version }}</td>
+                                    <td>
+                                        <span class="badge"
+                                            [ngClass]="{'badge-warning': doc.status === 'PENDING', 'badge-success': doc.status === 'APPROVED', 'badge-danger': doc.status === 'REJECTED'}">
+                                            {{ doc.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-sm premium-button"
+                                            (click)="download(doc.id, doc.originalFileName)">Download</button>
+                                        <button class="btn-sm premium-button"
+                                            style="background-color: #3b82f6; margin-left: 0.5rem;"
+                                            (click)="preview(doc.id, doc.originalFileName)">Preview</button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="selectedStudentView.documents.length === 0">
+                                    <td colspan="6" class="text-center">No documents found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>

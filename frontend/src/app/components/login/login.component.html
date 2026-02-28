@@ -1,0 +1,50 @@
+<div class="auth-wrapper">
+    <div class="glass-card zoom-in">
+        <div class="card-header">
+            <h2>Welcome Back</h2>
+            <p>Institutional Document Platform</p>
+        </div>
+
+        <form *ngIf="!isLoggedIn" name="form" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
+            <div class="form-group row-anim">
+                <label for="email">Email Address</label>
+                <div class="input-icon-wrapper">
+                    <input type="email" class="form-control premium-input" name="email" [(ngModel)]="form.email"
+                        required email #email="ngModel" placeholder="Enter your email" />
+                </div>
+                <div class="error-text" *ngIf="email.errors && f.submitted">
+                    <span *ngIf="email.errors['required']">Email is required</span>
+                    <span *ngIf="email.errors['email']">Email must be a valid email address</span>
+                </div>
+            </div>
+
+            <div class="form-group row-anim" style="animation-delay: 0.1s">
+                <label for="password">Password</label>
+                <div class="input-icon-wrapper">
+                    <input type="password" class="form-control premium-input" name="password"
+                        [(ngModel)]="form.password" required minlength="6" #password="ngModel"
+                        placeholder="Enter your password" />
+                </div>
+                <div class="error-text" *ngIf="password.errors && f.submitted">
+                    <span *ngIf="password.errors['required']">Password is required</span>
+                    <span *ngIf="password.errors['minlength']">Password must be at least 6 characters</span>
+                </div>
+            </div>
+
+            <div class="form-group row-anim" style="animation-delay: 0.2s">
+                <button class="btn-primary premium-button" [disabled]="isLoading">
+                    <span *ngIf="isLoading" class="spinner"></span>
+                    <span *ngIf="!isLoading">Login to Account</span>
+                </button>
+            </div>
+
+            <div class="alert alert-danger slide-down" *ngIf="f.submitted && isLoginFailed">
+                {{ errorMessage }}
+            </div>
+
+            <div class="auth-links row-anim" style="animation-delay: 0.3s">
+                <p>Don't have a student account? <a routerLink="/register">Register here</a></p>
+            </div>
+        </form>
+    </div>
+</div>
