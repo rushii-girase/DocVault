@@ -1,7 +1,7 @@
 <div class="dashboard-layout">
     <aside class="sidebar slide-right">
-        <div class="brand">
-            <h2>Institutional Hub</h2>
+        <div class="sidebar-header">
+            <h2>Doc Vault</h2>
         </div>
 
         <nav class="nav-menu">
@@ -235,7 +235,7 @@
             <!-- ALL DOCUMENTS TAB -->
             <div *ngIf="activeTab === 'documents'" class="card glass-card fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>All Institutional Documents</h3>
+                    <h3>All Doc Vault Documents</h3>
                     <div *ngIf="!selectedStudentView" style="display: flex; align-items: center;">
                         <input type="text" class="form-control premium-input" style="width: 250px; padding: 0.5rem;"
                             placeholder="Search Name, Email, or Roll No..." [(ngModel)]="documentSearchQuery">
