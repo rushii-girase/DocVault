@@ -102,8 +102,8 @@ public class DocumentController {
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
-    public ResponseEntity<List<Document>> getAllDocuments() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
+    public ResponseEntity<List<Document>> getAllDocuments(Authentication authentication) {
+        return ResponseEntity.ok(documentService.getAllDocuments(authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
@@ -114,6 +114,22 @@ public class DocumentController {
             return ResponseEntity.ok(new MessageResponse("Document deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error deleting document: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/request-all")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<?> requestCustomDocumentAll(
+            @RequestBody java.util.Map<String, String> payload,
+            Authentication authentication) {
+        try {
+            String documentName = payload.get("documentName");
+            String note = payload.get("note");
+            if (note == null) note = "";
+            documentService.requestCustomDocumentAll(documentName, note, authentication.getName());
+            return ResponseEntity.ok(new MessageResponse("Document requested from all students successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error requesting document: " + e.getMessage()));
         }
     }
 }

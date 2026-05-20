@@ -72,11 +72,13 @@ public class DocumentService {
         logAction(student, "UPLOAD", "Document", savedDoc.getId(),
                 "Uploaded document: " + title + " (v" + savedDoc.getVersion() + ")");
 
-        // Notify all staff that a new document was uploaded or changed
+        // Notify all staff of the same college that a new document was uploaded or changed
         java.util.List<User> staffMembers = userRepository.findByRole(com.app.institutional.entity.enums.Role.STAFF);
         for (User staff : staffMembers) {
-            notificationService.createNotification(staff,
-                    "Student " + student.getName() + " uploaded a new document/change: " + title, savedDoc.getId());
+            if (staff.getCollegeName() == student.getCollegeName()) {
+                notificationService.createNotification(staff,
+                        "Student " + student.getName() + " uploaded a new document/change: " + title, savedDoc.getId());
+            }
         }
 
         return savedDoc;
@@ -146,8 +148,18 @@ public class DocumentService {
         return documentRepository.findByStudentId(studentId);
     }
 
-    public List<Document> getAllDocuments() {
-        return documentRepository.findAll();
+    public List<Document> getAllDocuments(String requestorEmail) {
+        User requestor = userRepository.findByEmail(requestorEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<Document> documents = documentRepository.findAll();
+        
+        if (requestor.getRole() == com.app.institutional.entity.enums.Role.STAFF && requestor.getCollegeName() != null) {
+            documents = documents.stream()
+                .filter(doc -> doc.getStudent().getCollegeName() == requestor.getCollegeName())
+                .collect(java.util.stream.Collectors.toList());
+        }
+        return documents;
     }
 
     public Document getDocumentById(Long id) {
@@ -186,5 +198,29 @@ public class DocumentService {
                 .details(details)
                 .build();
         auditLogRepository.save(log);
+    }
+
+    @Transactional
+    public void requestCustomDocumentAll(String documentName, String note, String requesterEmail) {
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new RuntimeException("Requester not found"));
+
+        List<User> students = userRepository.findByRole(com.app.institutional.entity.enums.Role.STUDENT);
+        
+        // If staff, only request from their own college students
+        if (requester.getRole() == com.app.institutional.entity.enums.Role.STAFF && requester.getCollegeName() != null) {
+            students = students.stream()
+                .filter(s -> s.getCollegeName() == requester.getCollegeName())
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        String notificationMessage = "Action Required: Please upload a custom document (" + documentName + ").\nNote from Staff/Admin: " + note;
+        
+        for (User student : students) {
+            notificationService.createNotification(student, notificationMessage, null);
+        }
+
+        logAction(requester, "REQUEST_DOCUMENT", "Notification", null,
+                "Requested custom document '" + documentName + "' from all students");
     }
 }

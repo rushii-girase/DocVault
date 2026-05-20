@@ -11,4 +11,6 @@ public interface DocumentReviewRepository extends JpaRepository<DocumentReview, 
     List<DocumentReview> findByDocumentId(Long documentId);
 
     void deleteByDocumentId(Long documentId);
+
+    void deleteByReviewerId(Long reviewerId);
 }

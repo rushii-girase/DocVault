@@ -23,6 +23,6 @@ public class AuditLogController {
 
     @GetMapping("/all")
     public ResponseEntity<List<AuditLog>> getAllLogs() {
-        return ResponseEntity.ok(auditLogRepository.findAll());
+        return ResponseEntity.ok(auditLogRepository.findAllWithActor());
     }
 }

@@ -1,256 +1,492 @@
-<div class="dashboard-layout">
-    <aside class="sidebar slide-right">
-        <div class="sidebar-header">
-            <h2>Doc Vault</h2>
+<div class="flex h-screen overflow-hidden bg-background">
+  <!-- TopAppBar (Full Width) -->
+  <header
+    class="fixed top-0 left-0 w-full h-20 z-50 flex justify-between items-center px-6 lg:px-12 bg-surface/90 backdrop-blur-md border-b border-surface-container/50 shadow-sm">
+    <div class="flex items-center gap-4 lg:gap-8">
+      <div class="flex items-center gap-4 w-48 shrink-0">
+        <button (click)="isSidebarExpanded = !isSidebarExpanded"
+          class="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors flex items-center justify-center">
+          <span class="material-symbols-outlined text-[1.5rem]">menu</span>
+        </button>
+        <span class="text-2xl font-extrabold tracking-tighter text-indigo-600 dark:text-indigo-400 font-headline">Doc
+          Vault</span>
+      </div>
+      <div class="hidden sm:block h-6 w-px bg-outline-variant/30"></div>
+      <h1 class="hidden sm:block font-manrope text-xl font-bold -tracking-wide text-on-surface">Staff Dashboard</h1>
+    </div>
+
+    <div class="flex items-center gap-6">
+      <button
+        class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-full transition-colors relative"
+        (click)="activeTab = 'notifications'">
+        <span class="material-symbols-outlined">notifications</span>
+        <span *ngIf="notifications.length"
+          class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full outline outline-2 outline-surface"></span>
+      </button>
+      
+      <div class="relative z-50">
+        <!-- Transparent Overlay to close dropdown -->
+        <div *ngIf="showProfileDetails" class="fixed inset-0 z-40" (click)="showProfileDetails = false"></div>
+        <div
+          class="w-10 h-10 rounded-full bg-tertiary-container/30 text-tertiary-dim flex items-center justify-center font-bold border-2 border-white shadow-sm ring-1 ring-tertiary/10 cursor-pointer hover:bg-tertiary-container/50 transition-colors"
+          [title]="user?.name || 'Staff'"
+          (click)="showProfileDetails = !showProfileDetails">
+          {{ user?.name ? user.name.charAt(0).toUpperCase() : 'S' }}
         </div>
 
-        <nav class="nav-menu">
-            <div class="user-profile mb-4">
-                <div class="avatar staff-avatar">{{ user?.name?.charAt(0) }}</div>
-                <div class="user-info">
-                    <h4>{{ user?.name }}</h4>
-                    <span class="badge badge-staff">Staff Member</span>
-                </div>
+        <!-- Dropdown Profile Details -->
+        <div *ngIf="showProfileDetails" 
+             class="absolute top-14 right-0 w-80 bg-surface-container-lowest rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-outline-variant/20 p-5 animate-fade-in flex flex-col items-start text-left z-50">
+          <p class="font-manrope font-bold tracking-tight text-on-surface truncate w-full text-lg">{{ user?.name || 'Staff' }}</p>
+          <div class="flex items-center gap-2 mt-1 mb-3">
+            <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary rounded-md text-[10px] font-bold uppercase tracking-wider truncate">Staff Member</span>
+          </div>
+          
+          <div class="flex flex-col gap-3 mt-1 pt-3 border-t border-outline-variant/30 w-full">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-bold font-label text-on-surface-variant uppercase tracking-widest flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">school</span> Academic Info</span>
+              <span class="text-xs text-on-surface truncate font-medium">{{ user?.collegeName ? user.collegeName.replace('_', ' ') : 'N/A' }}</span>
+              <span class="text-xs text-on-surface-variant truncate">Dept: {{ user?.course ? user.course.replace('_', ' ') : 'N/A' }}</span>
             </div>
 
-            <button class="nav-item" [class.active]="activeTab === 'students'" (click)="activeTab = 'students'">
-                Students Directory
-            </button>
-            <button class="nav-item" [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">
-                Student Documents
-            </button>
-            <button class="nav-item" [class.active]="activeTab === 'notifications'"
-                (click)="activeTab = 'notifications'">
-                Notifications
-                <span class="badge badge-danger" style="margin-left:auto; float:right"
-                    *ngIf="notifications.length">{{notifications.length}}</span>
-            </button>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-bold font-label text-on-surface-variant uppercase tracking-widest flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">contact_mail</span> Contact Info</span>
+              <span class="text-xs text-on-surface truncate">{{ user?.email || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-            <div class="spacer"></div>
-            <button class="nav-item text-danger" (click)="logout()">
-                Logout
-            </button>
+  <!-- Main Body Area -->
+  <div class="flex w-full h-[calc(100vh-5rem)] mt-20 relative">
+
+    <!-- NavigationDrawer (Sidebar) -->
+    <aside
+      class="fixed left-0 top-20 bottom-0 flex flex-col bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-xl z-40 transition-[width] duration-300 ease-in-out border-r border-surface-container/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+      [ngClass]="isSidebarExpanded ? 'w-64' : 'w-20'">
+      <div class="flex flex-col h-full py-6 overflow-y-auto" [ngClass]="isSidebarExpanded ? 'px-6' : 'px-3'">
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 flex flex-col gap-2">
+          <a href="#" (click)="activeTab = 'students'; $event.preventDefault()"
+            class="flex items-center rounded-xl transition-all duration-200"
+            [title]="!isSidebarExpanded ? 'Students Directory' : ''" [ngClass]="[
+             isSidebarExpanded ? 'px-4 py-3 gap-3' : 'justify-center py-3 px-0',
+             activeTab === 'students' ? 'text-indigo-600 dark:text-indigo-400 font-semibold bg-white dark:bg-slate-800 scale-[0.98] shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+           ]">
+            <span class="material-symbols-outlined flex-shrink-0">group</span>
+            <span *ngIf="isSidebarExpanded" class="font-inter text-sm font-medium whitespace-nowrap">Students
+              Directory</span>
+          </a>
+          <a href="#" (click)="activeTab = 'documents'; $event.preventDefault()"
+            class="flex items-center rounded-xl transition-all duration-200"
+            [title]="!isSidebarExpanded ? 'Student Documents' : ''" [ngClass]="[
+             isSidebarExpanded ? 'px-4 py-3 gap-3' : 'justify-center py-3 px-0',
+             activeTab === 'documents' ? 'text-indigo-600 dark:text-indigo-400 font-semibold bg-white dark:bg-slate-800 scale-[0.98] shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+           ]">
+            <span class="material-symbols-outlined flex-shrink-0">assignment</span>
+            <span *ngIf="isSidebarExpanded" class="font-inter text-sm font-medium whitespace-nowrap">Student
+              Documents</span>
+          </a>
         </nav>
+        <!-- Bottom Action -->
+        <div class="mt-auto">
+          <a href="#" (click)="logout(); $event.preventDefault()"
+            class="flex items-center text-error hover:bg-error/5 hover:text-error-dim rounded-xl transition-colors"
+            [title]="!isSidebarExpanded ? 'Logout' : ''"
+            [ngClass]="isSidebarExpanded ? 'px-4 py-3 gap-3' : 'justify-center py-3 px-0'">
+            <span class="material-symbols-outlined flex-shrink-0">logout</span>
+            <span *ngIf="isSidebarExpanded" class="font-inter text-sm font-medium whitespace-nowrap">Logout</span>
+          </a>
+        </div>
+      </div>
     </aside>
 
-    <main class="main-content fade-in">
-        <header class="top-nav">
-            <h2>Staff Operations</h2>
-        </header>
+    <!-- Main Content Canvas -->
+    <main class="flex-1 w-full h-full overflow-y-auto transition-[margin-left] duration-300 ease-in-out relative z-10"
+      [ngClass]="isSidebarExpanded ? 'ml-64' : 'ml-20'">
+      <div class="p-6 md:p-12 max-w-7xl mx-auto w-full pb-24">
 
-        <div class="content-wrapper">
-
-            <!-- STUDENTS DIRECTORY TAB -->
-            <div *ngIf="activeTab === 'students'" class="card glass-card fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div>
-                        <h3>Enrolled Students Directory</h3>
-                        <p class="text-muted mb-0">View all registered students and their details.</p>
-                    </div>
-
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <input type="text" class="form-control premium-input" style="width: 300px; padding: 0.5rem;"
-                            placeholder="Search by Name, Email, or Roll No..." [(ngModel)]="searchQuery">
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table premium-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Roll No</th>
-                                <th>Class & Div</th>
-                                <th>College</th>
-                                <th>Course</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Caste</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let student of filteredStudents">
-                                <td><strong>{{ student.name }}</strong></td>
-                                <td>{{ student.rollNo || 'N/A' }}</td>
-                                <td>{{ student.classLevel || 'N/A' }}<span *ngIf="student.division"> - {{
-                                        student.division }}</span></td>
-                                <td>{{ student.collegeName || 'N/A' }}</td>
-                                <td>{{ student.course || 'N/A' }}</td>
-                                <td>{{ student.email }}</td>
-                                <td>{{ student.mobileNo || 'N/A' }}</td>
-                                <td><span class="badge badge-secondary">{{ student.caste || 'N/A' }}</span></td>
-                            </tr>
-                            <tr *ngIf="filteredStudents.length === 0">
-                                <td colspan="8" class="text-center">No students match your search criteria.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <!-- STUDENTS TAB -->
+        <div *ngIf="activeTab === 'students'" class="animate-fade-in">
+          <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2">Enrolled Students
+              </h2>
+              <p class="text-on-surface-variant font-body max-w-2xl">View all registered students and their academic
+                details.</p>
             </div>
-
-            <!-- DOCUMENTS TAB -->
-            <div *ngIf="activeTab === 'documents'" class="card glass-card fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div>
-                        <h3>Pending Document Reviews</h3>
-                        <p class="text-muted mb-0">Review and verify student uploads.</p>
-                    </div>
-
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <input type="text" class="form-control premium-input" style="width: 250px; padding: 0.5rem;"
-                                placeholder="Search Name, Email, or Roll No..." [(ngModel)]="documentSearchQuery">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label style="margin: 0; font-weight: 500; white-space: nowrap;">Filter Status:</label>
-                                <select class="form-control premium-input" style="width: 150px; padding: 0.5rem;"
-                                    [(ngModel)]="statusFilter">
-                                    <option value="ALL">All Documents</option>
-                                    <option value="PENDING">Pending Review</option>
-                                    <option value="APPROVED">Approved</option>
-                                    <option value="REJECTED">Rejected</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-responsive" *ngIf="!selectedStudentView">
-                    <table class="table premium-table">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                <th>Roll No & Course</th>
-                                <th>Documents Count</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let group of groupedStudents">
-                                <td>
-                                    <strong>{{ group.student.name }}</strong>
-                                    <!-- Red Dot Indicator -->
-                                    <span *ngIf="group.hasUpdates" title="Student made changes (Pending Reviews)"
-                                        style="display: inline-block; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; margin-left: 0.5rem; box-shadow: 0 0 5px #ef4444;"></span>
-                                </td>
-                                <td>
-                                    {{ group.student.rollNo }}<br>
-                                    <small class="text-muted">{{ group.student.collegeName }} ({{ group.student.course
-                                        }})</small>
-                                </td>
-                                <td>{{ group.documents.length }} uploaded</td>
-                                <td>
-                                    <button class="btn-sm premium-button" (click)="viewStudent(group)"
-                                        style="background: #3b82f6">View Student Docs</button>
-                                </td>
-                            </tr>
-                            <tr *ngIf="groupedStudents.length === 0">
-                                <td colspan="4" class="text-center">No students found matching this filter.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="student-details fade-in" *ngIf="selectedStudentView">
-                    <div style="margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
-                        <button class="btn-sm premium-button mb-2" (click)="closeStudentView()"
-                            style="background: #6b7280">&larr; Back to Student List</button>
-                        <h4 style="margin-top: 0.5rem;">Documents for {{ selectedStudentView.student.name }}</h4>
-                        <p class="text-muted mb-0">{{ selectedStudentView.student.collegeName }} - {{
-                            selectedStudentView.student.course }}</p>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table premium-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>File Content</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let doc of selectedStudentView.documents">
-                                    <td><strong>{{ doc.title }}</strong></td>
-                                    <td>
-                                        <button class="btn-sm premium-button"
-                                            (click)="download(doc.id, doc.originalFileName)">Download</button>
-                                        <button class="btn-sm premium-button"
-                                            style="background-color: #3b82f6; margin-left: 0.5rem;"
-                                            (click)="preview(doc.id, doc.originalFileName)">Preview</button>
-                                    </td>
-                                    <td>
-                                        <span class="badge"
-                                            [ngClass]="{'badge-warning': doc.status === 'PENDING', 'badge-success': doc.status === 'APPROVED', 'badge-danger': doc.status === 'REJECTED'}">
-                                            {{ doc.status }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn-sm premium-button" (click)="openReviewModal(doc)"
-                                            style="background: #10b981">Review</button>
-                                    </td>
-                                </tr>
-                                <tr *ngIf="selectedStudentView.documents.length === 0">
-                                    <td colspan="4" class="text-center">No documents found.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="relative w-full md:w-80">
+              <span
+                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 z-10">search</span>
+              <input type="text"
+                class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:border-primary/20 focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-on-surface text-sm relative z-0"
+                placeholder="Search by Name, Email, Roll No..." [(ngModel)]="searchQuery">
             </div>
+          </header>
 
-            <!-- NOTIFICATIONS TAB -->
-            <div *ngIf="activeTab === 'notifications'" class="card glass-card fade-in">
-                <h3>System Notifications</h3>
-
-                <div class="notification-list mt-4">
-                    <div *ngFor="let note of notifications" class="alert"
-                        [ngClass]="note.read ? 'alert-secondary' : 'alert-primary'"
-                        style="display:flex; justify-content:space-between; align-items:center; padding: 1rem; border: 1px solid #e2e8f0; margin-bottom: 0.5rem; border-radius: 0.5rem;">
-                        <div>
-                            <p style="margin:0; font-weight: 500;">{{ note.message }}</p>
-                            <small class="text-muted">{{ note.createdAt | date:'short' }}</small>
-                        </div>
-                        <button class="btn-sm premium-button" *ngIf="!note.read" (click)="markRead(note.id)">Mark
-                            Read</button>
-                    </div>
-                    <p *ngIf="notifications.length === 0" class="text-center">All caught up!</p>
-                </div>
+          <section
+            class="bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(45,51,55,0.06)] overflow-hidden border border-white/40">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low/50">
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Name</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Roll No</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Class & Div</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Course</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Email / Phone</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Category</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-surface-container">
+                  <tr *ngFor="let student of filteredStudents"
+                    class="hover:bg-surface-container-low/30 transition-colors group">
+                    <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">{{ student.name }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant whitespace-nowrap">{{ student.rollNo || 'N/A'
+                      }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant whitespace-nowrap">{{ student.classLevel ||
+                      'N/A' }}<span *ngIf="student.division"> - {{ student.division }}</span></td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant whitespace-nowrap">
+                      {{ student.course || 'N/A' }}
+                      <br><span class="text-xs text-on-surface-variant/70">{{ student.collegeName || '' }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-on-surface font-medium">{{ student.email }}</div>
+                      <div class="text-xs text-on-surface-variant mt-0.5">{{ student.mobileNo || 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wide uppercase bg-surface-container text-on-surface-variant border border-outline-variant/20">
+                        {{ student.caste || 'N/A' }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="filteredStudents.length === 0">
+                    <td colspan="6" class="px-8 py-10 text-center text-on-surface-variant font-medium">No students match
+                      your search criteria.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
+          </section>
         </div>
-    </main>
-</div>
 
-<!-- Review Modal Overlay -->
-<div class="modal-overlay" *ngIf="reviewModalOpen">
-    <div class="glass-card modal-content fade-in">
-        <h3>Review Document</h3>
-        <p class="text-muted">Assessing: {{ selectedDoc?.title }} by {{ selectedDoc?.student?.name }}</p>
 
-        <div class="alert alert-info mt-4" *ngIf="reviewMessage">{{reviewMessage}}</div>
-
-        <form (ngSubmit)="submitReview()" class="mt-4 form-grid">
-            <div class="form-group full-width">
-                <label>Decision</label>
-                <select class="form-control premium-input" name="status" [(ngModel)]="reviewForm.status">
-                    <option value="APPROVED">Approve Document</option>
-                    <option value="REJECTED">Reject Document</option>
-                    <option value="PENDING">Mark Pending</option>
+        <!-- DOCUMENTS TAB -->
+        <div *ngIf="activeTab === 'documents'" class="animate-fade-in">
+          <header class="mb-10 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div>
+              <h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2">Pending Reviews</h2>
+              <p class="text-on-surface-variant font-body max-w-2xl">Review and verify student document uploads.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-4 mt-4 lg:mt-0 w-full lg:w-auto">
+              <button
+                class="px-5 py-3 bg-tertiary/10 text-tertiary hover:bg-tertiary hover:text-white font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+                (click)="openRequestModal()">
+                <span class="material-symbols-outlined text-lg">add_circle</span> Request
+              </button>
+              <div class="relative w-full sm:w-64">
+                <span
+                  class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 z-10">search</span>
+                <input type="text"
+                  class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:border-primary/20 focus:ring-1 focus:ring-primary/20 transition-all text-on-surface text-sm"
+                  placeholder="Search Student..." [(ngModel)]="documentSearchQuery">
+              </div>
+              <div class="relative w-full sm:w-48">
+                <select
+                  class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:border-primary/20 focus:ring-1 focus:ring-primary/20 transition-all text-on-surface text-sm appearance-none font-medium text-on-surface-variant"
+                  [(ngModel)]="statusFilter">
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING">Pending Review</option>
+                  <option value="APPROVED">Approved Docs</option>
+                  <option value="REJECTED">Rejected Docs</option>
                 </select>
+                <span
+                  class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">expand_more</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Grouped View -->
+          <section *ngIf="!selectedStudentView"
+            class="bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(45,51,55,0.06)] overflow-hidden border border-white/40 animate-fade-in">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low/50">
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Student Name</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Roll No & Course</th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Documents Count</th>
+                    <th
+                      class="px-6 py-4 text-right text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+                      Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-surface-container">
+                  <tr *ngFor="let group of groupedStudents"
+                    class="hover:bg-surface-container-low/30 transition-colors group relative">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <strong class="font-bold text-on-surface">{{ group.student.name }}</strong>
+                        <span *ngIf="group.hasUpdates"
+                          class="w-2.5 h-2.5 bg-error rounded-full shadow-[0_0_8px_rgba(172,49,73,0.6)] animate-pulse"
+                          title="Pending Reviews"></span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-on-surface">{{ group.student.rollNo }}</div>
+                      <div class="text-xs text-on-surface-variant mt-0.5">{{ group.student.collegeName }} ({{
+                        group.student.course }})</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">
+                      <span
+                        class="inline-flex items-center justify-center bg-surface-container px-3 py-1 rounded-lg border border-outline-variant/20">
+                        {{ group.documents.length }} uploaded
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                      <button
+                        class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-xs rounded-lg transition-all"
+                        (click)="viewStudent(group)">
+                        View Documents
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="groupedStudents.length === 0">
+                    <td colspan="4" class="px-8 py-10 text-center text-on-surface-variant font-medium">No students found
+                      matching this filter.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Active Student Detailed View -->
+          <section *ngIf="selectedStudentView"
+            class="bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(45,51,55,0.06)] border border-white/40 p-8 animate-fade-in relative">
+
+            <div class="mb-8 border-b border-surface-container/50 pb-6">
+              <button
+                class="flex items-center gap-2 text-sm font-bold text-on-surface-variant hover:text-primary transition-colors mb-4"
+                (click)="closeStudentView()">
+                <span class="material-symbols-outlined text-lg">arrow_back</span> Back to Directory
+              </button>
+              <h4 class="text-2xl font-headline font-extrabold text-on-surface">Documents for {{
+                selectedStudentView.student.name }}</h4>
+              <p class="text-sm text-on-surface-variant mt-1">{{ selectedStudentView.student.collegeName }} &bull; {{
+                selectedStudentView.student.course }}</p>
             </div>
 
-            <div class="form-group full-width">
-                <label>Staff Remark</label>
-                <textarea class="form-control premium-input" rows="4" name="remark" [(ngModel)]="reviewForm.remark"
-                    placeholder="Provide feedback to the student"></textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              <div *ngFor="let doc of selectedStudentView.documents"
+                class="bg-surface-container-low rounded-xl border border-outline-variant/20 p-5 flex flex-col relative overflow-hidden group">
+
+                <div class="flex justify-between items-start mb-4">
+                  <h5 class="font-bold text-on-surface truncate pr-4">{{ doc.title }}</h5>
+                  <span
+                    class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase"
+                    [ngClass]="{'bg-yellow-100 text-yellow-800': doc.status === 'PENDING', 'bg-green-100 text-green-800': doc.status === 'APPROVED', 'bg-error-container/30 text-error-dim': doc.status === 'REJECTED'}">
+                    {{ doc.status }}
+                  </span>
+                </div>
+
+                <div
+                  class="text-xs text-on-surface-variant mb-6 flex items-center gap-2 bg-surface-container/50 px-3 py-2 rounded-lg">
+                  <span class="material-symbols-outlined text-lg text-primary shrink-0">description</span>
+                  <span class="truncate min-w-0 flex-1">{{ doc.originalFileName }}</span>
+                </div>
+
+                <div class="mt-auto flex items-center gap-2">
+                  <button
+                    class="flex-1 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                    (click)="openReviewModal(doc)">
+                    Review
+                  </button>
+                  <button
+                    class="p-2 text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors border border-outline-variant/20 bg-white"
+                    title="Preview" (click)="preview(doc.id, doc.originalFileName)">
+                    <span class="material-symbols-outlined text-[1.125rem]">visibility</span>
+                  </button>
+                  <button
+                    class="p-2 text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors border border-outline-variant/20 bg-white"
+                    title="Download" (click)="download(doc.id, doc.originalFileName)">
+                    <span class="material-symbols-outlined text-[1.125rem]">download</span>
+                  </button>
+                </div>
+
+              </div>
+
+              <div *ngIf="selectedStudentView.documents.length === 0"
+                class="col-span-full py-8 text-center text-on-surface-variant font-medium">
+                No documents found.
+              </div>
+
+            </div>
+          </section>
+        </div>
+
+        <!-- NOTIFICATIONS TAB -->
+        <div *ngIf="activeTab === 'notifications'" class="animate-fade-in">
+          <header class="mb-12">
+            <h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2">System Alerts</h2>
+            <p class="text-on-surface-variant font-body max-w-2xl">Updates and activity related to student operations.
+            </p>
+          </header>
+
+          <div class="flex flex-col gap-4">
+            <div *ngFor="let note of notifications"
+              class="p-6 rounded-xl border flex justify-between items-center group transition-colors"
+              [ngClass]="note.read ? 'bg-surface-container-low border-transparent' : 'bg-primary-container/10 border-primary-container/30 shadow-sm'">
+              <div class="flex gap-4 items-start">
+                <span class="material-symbols-outlined mt-0.5 text-2xl"
+                  [ngClass]="note.read ? 'text-on-surface-variant/50' : 'text-primary'">
+                  {{ note.read ? 'notifications_paused' : 'notifications_active' }}
+                </span>
+                <div>
+                  <p class="font-medium text-sm text-on-surface">{{ note.message }}</p>
+                  <small class="text-xs text-on-surface-variant font-label mt-1 block">{{ note.createdAt | date:'short'
+                    }}</small>
+                </div>
+              </div>
+              <button *ngIf="!note.read" (click)="markRead(note.id)"
+                class="px-4 py-2 bg-white text-primary text-xs font-bold rounded-lg shadow-sm border border-outline-variant/20 hover:bg-primary-container/10 transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 focus:opacity-100">
+                Mark Read
+              </button>
             </div>
 
-            <div class="form-group full-width" style="display: flex; gap: 1rem;">
-                <button type="submit" class="premium-button flex-1" style="width: 50%">Submit Review</button>
-                <button type="button" class="premium-button flex-1" style="width: 50%; background: #6b7280"
-                    (click)="closeReviewModal()">Cancel</button>
+            <div *ngIf="notifications.length === 0"
+              class="text-center py-16 bg-surface-container-low/50 rounded-xl border border-dashed border-outline-variant/30">
+              <span class="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">done_all</span>
+              <p class="text-on-surface-variant font-medium">All caught up!</p>
             </div>
-        </form>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Request Custom Document Modal -->
+  <div *ngIf="showRequestModal" class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in backdrop-bg"
+    (click)="closeRequestModalOutside($event)">
+    <div class="absolute inset-0 bg-scrim/40 backdrop-blur-sm pointer-events-none"></div>
+
+    <div
+      class="bg-surface-container-lowest rounded-[1.5rem] shadow-2xl p-8 w-full max-w-md border border-white/20 relative">
+      <h3 class="text-2xl font-headline font-extrabold text-on-surface mb-6 flex items-center gap-3">
+        <span class="material-symbols-outlined text-3xl text-primary">send</span> Request Document
+      </h3>
+
+      <div *ngIf="requestMessage" class="p-4 mb-6 rounded-lg text-sm font-medium"
+        [ngClass]="requestMessage.includes('Error') || requestMessage.includes('failed') ? 'bg-error-container/20 text-error-dim' : 'bg-primary-container/20 text-primary-dim'">
+        {{ requestMessage }}
+      </div>
+
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Document
+            Name</label>
+          <input type="text" [(ngModel)]="requestForm.documentName"
+            class="px-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:ring-1 focus:ring-primary/20 text-on-surface transition-all placeholder:text-on-surface-variant/50"
+            placeholder="e.g., Updated Income Certificate" required>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Optional
+            Note</label>
+          <textarea [(ngModel)]="requestForm.note" rows="3"
+            class="px-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:ring-1 focus:ring-primary/20 text-on-surface transition-all resize-none placeholder:text-on-surface-variant/50"
+            placeholder="Instructions..."></textarea>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-end gap-3">
+        <button
+          class="px-6 py-2.5 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-colors"
+          (click)="closeRequestModal()">Cancel</button>
+        <button
+          class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary-dim transition-colors disabled:opacity-50"
+          [disabled]="!requestForm.documentName" (click)="submitRequestAll()">Send Request</button>
+      </div>
     </div>
-</div>
+  </div>
+
+  <!-- Review Modal Overlay -->
+  <div
+    class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+    *ngIf="reviewModalOpen">
+    <div
+      class="bg-surface-container-lowest rounded-[1.5rem] shadow-2xl p-8 w-full max-w-lg border border-white/20 relative">
+
+      <div class="mb-6 border-b border-surface-container pb-4">
+        <h3 class="text-2xl font-headline font-extrabold tracking-tight text-on-surface">Review Document</h3>
+        <p class="text-sm text-on-surface-variant mt-1.5 flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">assignment_ind</span>
+          {{ selectedDoc?.title }} by <span class="font-bold">{{ selectedDoc?.student?.name }}</span>
+        </p>
+      </div>
+
+      <div *ngIf="reviewMessage"
+        class="mb-6 p-4 rounded-xl text-sm font-medium bg-primary-container/20 text-primary-dim border border-primary-container/30">
+        {{reviewMessage}}
+      </div>
+
+      <form (ngSubmit)="submitReview()" class="flex flex-col gap-6">
+
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Decision</label>
+          <select
+            class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:ring-1 focus:ring-primary/20 text-on-surface font-medium"
+            name="status" [(ngModel)]="reviewForm.status">
+            <option value="APPROVED" class="text-green-700 font-bold">Approve Document</option>
+            <option value="REJECTED" class="text-error font-bold">Reject Document</option>
+            <option value="PENDING" class="text-yellow-700 font-bold">Mark Pending</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Staff
+            Remark</label>
+          <textarea
+            class="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:ring-1 focus:ring-primary/20 text-on-surface resize-none"
+            rows="3" name="remark" [(ngModel)]="reviewForm.remark"
+            placeholder="Provide feedback or reasons for rejection..."></textarea>
+        </div>
+
+        <div class="flex gap-4 mt-2">
+          <button type="button"
+            class="flex-1 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface font-bold rounded-xl transition-colors border border-outline-variant/30"
+            (click)="closeReviewModal()">
+            Cancel
+          </button>
+          <button type="submit"
+            class="flex-1 py-3 bg-gradient-to-br from-primary to-primary-dim text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(78,69,228,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+            Submit Review
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>

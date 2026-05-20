@@ -1,50 +1,62 @@
-<div class="auth-wrapper">
-    <div class="glass-card zoom-in">
-        <div class="card-header">
-            <h2>Welcome Back</h2>
-            <p>Doc Vault</p>
-        </div>
+<div class="min-h-screen bg-background flex flex-col justify-center items-center p-6 relative overflow-hidden font-body text-on-surface">
+  
+  <!-- Decorative Aura Background -->
+  <div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-primary-container/30 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-[20%] -right-[10%] w-[40%] h-[60%] bg-secondary-container/30 rounded-full blur-3xl pointer-events-none"></div>
 
-        <form *ngIf="!isLoggedIn" name="form" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
-            <div class="form-group row-anim">
-                <label for="email">Email Address</label>
-                <div class="input-icon-wrapper">
-                    <input type="email" class="form-control premium-input" name="email" [(ngModel)]="form.email"
-                        required email #email="ngModel" placeholder="Enter your email" />
-                </div>
-                <div class="error-text" *ngIf="email.errors && f.submitted">
-                    <span *ngIf="email.errors['required']">Email is required</span>
-                    <span *ngIf="email.errors['email']">Email must be a valid email address</span>
-                </div>
-            </div>
-
-            <div class="form-group row-anim" style="animation-delay: 0.1s">
-                <label for="password">Password</label>
-                <div class="input-icon-wrapper">
-                    <input type="password" class="form-control premium-input" name="password"
-                        [(ngModel)]="form.password" required minlength="6" #password="ngModel"
-                        placeholder="Enter your password" />
-                </div>
-                <div class="error-text" *ngIf="password.errors && f.submitted">
-                    <span *ngIf="password.errors['required']">Password is required</span>
-                    <span *ngIf="password.errors['minlength']">Password must be at least 6 characters</span>
-                </div>
-            </div>
-
-            <div class="form-group row-anim" style="animation-delay: 0.2s">
-                <button class="btn-primary premium-button" [disabled]="isLoading">
-                    <span *ngIf="isLoading" class="spinner"></span>
-                    <span *ngIf="!isLoading">Login to Account</span>
-                </button>
-            </div>
-
-            <div class="alert alert-danger slide-down" *ngIf="f.submitted && isLoginFailed">
-                {{ errorMessage }}
-            </div>
-
-            <div class="auth-links row-anim" style="animation-delay: 0.3s">
-                <p>Don't have a student account? <a routerLink="/register">Register here</a></p>
-            </div>
-        </form>
+  <!-- Login Card -->
+  <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-[0px_12px_32px_rgba(45,51,55,0.06)] border border-white/40 p-10 w-full max-w-md relative z-10 animate-fade-in">
+    <div class="text-center mb-10">
+      <div class="w-16 h-16 mx-auto bg-primary-container/30 text-primary rounded-[1rem] flex items-center justify-center mb-6">
+        <span class="material-symbols-outlined text-3xl">lock</span>
+      </div>
+      <h2 class="text-3xl font-headline font-extrabold tracking-tight text-on-surface mb-2">Welcome Back</h2>
+      <p class="text-on-surface-variant font-label text-sm">Sign in to Doc Vault</p>
     </div>
+
+    <form *ngIf="!isLoggedIn" name="form" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate class="flex flex-col gap-5">
+      
+      <div class="flex flex-col gap-2">
+        <label for="email" class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Email Address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">mail</span>
+          <input type="email" class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:border-primary/20 focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-on-surface" name="email" [(ngModel)]="form.email" required email #email="ngModel" placeholder="Enter your email" />
+        </div>
+        <div class="text-xs text-error mt-1" *ngIf="email.errors && f.submitted">
+          <span *ngIf="email.errors['required']">Email is required</span>
+          <span *ngIf="email.errors['email']">Must be a valid email</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="password" class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Password</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">key</span>
+          <input type="password" class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-container-low border border-transparent focus:border-primary/20 focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-on-surface" name="password" [(ngModel)]="form.password" required minlength="6" #password="ngModel" placeholder="Enter your password" />
+        </div>
+        <div class="text-xs text-error mt-1" *ngIf="password.errors && f.submitted">
+          <span *ngIf="password.errors['required']">Password is required</span>
+          <span *ngIf="password.errors['minlength']">Minimum 6 characters</span>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button class="w-full py-3.5 bg-gradient-to-br from-primary to-primary-dim text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="material-symbols-outlined animate-spin">progress_activity</span>
+          <span *ngIf="!isLoading">Login to Account</span>
+        </button>
+      </div>
+
+      <div class="mt-4 p-4 bg-error-container/20 text-error-dim rounded-lg text-sm font-medium border border-error-container/30 flex items-center gap-3 animate-fade-in" *ngIf="f.submitted && isLoginFailed">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="mt-6 text-center text-sm text-on-surface-variant">
+        Don't have a student account? 
+        <a routerLink="/register" class="text-primary font-bold hover:underline transition-all">Register here</a>
+      </div>
+    </form>
+    
+  </div>
 </div>

@@ -4,6 +4,7 @@ import com.app.institutional.entity.User;
 import com.app.institutional.entity.enums.*;
 import com.app.institutional.payload.request.LoginRequest;
 import com.app.institutional.payload.request.StudentSignupRequest;
+import com.app.institutional.payload.request.UpdateProfileRequest;
 import com.app.institutional.payload.response.JwtResponse;
 import com.app.institutional.payload.response.MessageResponse;
 import com.app.institutional.repository.UserRepository;
@@ -69,7 +70,14 @@ public class AuthController {
                 userDetails.getEmail(),
                 role,
                 userDetails.isEmailVerified(),
-                userDetails.getCaste()));
+                userDetails.getCaste(),
+                userOpt.get().getMobileNo(),
+                userOpt.get().getCollegeName() != null ? userOpt.get().getCollegeName().getDisplayName() : null,
+                userOpt.get().getCourse() != null ? userOpt.get().getCourse().getDisplayName() : null,
+                userOpt.get().getClassLevel() != null ? userOpt.get().getClassLevel().name() : null,
+                userOpt.get().getDivision(),
+                userOpt.get().getRollNo()
+        ));
     }
 
     @PostMapping("/register-student")
@@ -155,7 +163,81 @@ public class AuthController {
 
     @GetMapping("/students")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
-    public ResponseEntity<java.util.List<User>> getAllStudents() {
-        return ResponseEntity.ok(userRepository.findByRole(com.app.institutional.entity.enums.Role.STUDENT));
+    public ResponseEntity<java.util.List<User>> getAllStudents(Authentication authentication) {
+        User requester = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        java.util.List<User> students = userRepository.findByRole(com.app.institutional.entity.enums.Role.STUDENT);
+        
+        if (requester.getRole() == com.app.institutional.entity.enums.Role.STAFF && requester.getCollegeName() != null) {
+            students = students.stream()
+                .filter(s -> s.getCollegeName() == requester.getCollegeName())
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return ResponseEntity.ok(students);
+    }
+
+    @PutMapping("/student/update-profile")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> updateStudentProfile(@Valid @RequestBody UpdateProfileRequest updateRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Optional<User> userOpt = userRepository.findById(userDetails.getId());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found."));
+        }
+
+        User user = userOpt.get();
+        if (user.getRole() != Role.STUDENT) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Only students can update these details."));
+        }
+
+        try {
+            ClassLevel classLevel = ClassLevel.valueOf(updateRequest.getClassLevel().toUpperCase());
+            
+            // Check if roll number is changed and if new roll number exists
+            if (updateRequest.getRollNo() != null && !updateRequest.getRollNo().trim().isEmpty() 
+                && !updateRequest.getRollNo().equals(user.getRollNo())) {
+                if (userRepository.existsByRollNo(updateRequest.getRollNo())) {
+                    return ResponseEntity.badRequest().body(new MessageResponse("Error: Roll Number is already registered!"));
+                }
+                user.setRollNo(updateRequest.getRollNo());
+            }
+
+            user.setClassLevel(classLevel);
+            user.setDivision(updateRequest.getDivision());
+            userRepository.save(user);
+
+            // Generate a fresh JWT with updated details
+            String role = userDetails.getAuthorities().iterator().next().getAuthority();
+            
+            // Re-authenticate to get updated details in context? Not strictly necessary if we just build the response.
+            // But let's return the new JwtResponse manually since we have the updated user object.
+            // Note: we'd ideally regenerate the token if roles/vital claims changed, 
+            // but since we only changed class/division and JWT doesn't hold these (only in response body),
+            // we can just reuse the token or generate a new one if we want.
+            // Generating a new token is cleaner to refresh expiry:
+            String jwt = jwtUtils.generateJwtToken(authentication);
+
+            return ResponseEntity.ok(new JwtResponse(jwt,
+                    userDetails.getId(),
+                    userDetails.getName(),
+                    userDetails.getEmail(),
+                    role,
+                    userDetails.isEmailVerified(),
+                    userDetails.getCaste(),
+                    user.getMobileNo(),
+                    user.getCollegeName() != null ? user.getCollegeName().getDisplayName() : null,
+                    user.getCourse() != null ? user.getCourse().getDisplayName() : null,
+                    user.getClassLevel() != null ? user.getClassLevel().name() : null,
+                    user.getDivision(),
+                    user.getRollNo()
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid class level."));
+        }
     }
 }

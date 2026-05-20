@@ -8,10 +8,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  
+  <!-- STITCH Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        },
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#770326", "tertiary": "#006592", "secondary-container": "#e9ddff",
+              "secondary-fixed-dim": "#ddcdff", "error-container": "#f76a80",
+              "surface-container-highest": "#dde3e7", "on-primary-container": "#270ac3",
+              "inverse-surface": "#0b0f10", "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed": "#4d00b7", "surface-variant": "#dde3e7",
+              "primary-fixed-dim": "#adabff", "surface-dim": "#d3dbdf", "primary-fixed": "#bdbaff",
+              "secondary-fixed": "#e9ddff", "on-surface": "#2d3337", "tertiary-dim": "#005980",
+              "outline-variant": "#acb3b7", "on-primary-fixed-variant": "#3220cb", "outline": "#757c7f",
+              "surface-tint": "#4e45e4", "on-tertiary-container": "#003b56", "on-secondary": "#fdf7ff",
+              "on-error-container": "#68001f", "primary-container": "#bdbaff", "on-surface-variant": "#596063",
+              "secondary": "#6e3bd8", "surface-bright": "#f7f9fb", "on-secondary-container": "#6029c9",
+              "background": "#f7f9fb", "on-primary": "#fbf7ff", "surface-container-high": "#e3e9ec",
+              "on-secondary-fixed-variant": "#6a37d4", "tertiary-fixed-dim": "#34b5fa",
+              "on-tertiary-fixed-variant": "#004463", "inverse-primary": "#8582ff", "primary-dim": "#4135d8",
+              "on-error": "#fff7f7", "on-primary-fixed": "#17008c", "surface-container": "#eaeef1",
+              "on-background": "#2d3337", "error": "#ac3149", "primary": "#4e45e4", "surface": "#f7f9fb",
+              "surface-container-low": "#f1f4f6", "inverse-on-surface": "#9a9d9f", "secondary-dim": "#622bcb",
+              "tertiary-fixed": "#61c2ff", "tertiary-container": "#61c2ff", "on-tertiary-fixed": "#002336",
+              "on-tertiary": "#f5f9ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+  </script>
 </head>
 
-<body>
+<body class="font-body text-on-surface bg-background min-h-screen">
   <app-root></app-root>
 </body>
 

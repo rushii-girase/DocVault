@@ -23,6 +23,10 @@ body {
   box-sizing: border-box;
 }
 
+a {
+  text-decoration: none;
+}
+
 /* Base Utility Classes */
 .btn-primary {
   background-color: var(--primary-color);

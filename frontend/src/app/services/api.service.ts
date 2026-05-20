@@ -67,6 +67,10 @@ export class apiService {
         return this.http.get(API_URL + 'documents/all');
     }
 
+    requestCustomDocumentAll(documentName: string, note: string): Observable<any> {
+        return this.http.post(API_URL + 'documents/request-all', { documentName, note });
+    }
+
     // Notifications
     getNotifications(): Observable<any> {
         return this.http.get(API_URL + 'notifications/all');
@@ -78,5 +82,14 @@ export class apiService {
 
     markNotificationAsRead(id: number): Observable<any> {
         return this.http.put(API_URL + `notifications/${id}/read`, {});
+    }
+
+    // Profile
+    updateProfile(data: any): Observable<any> {
+        return this.http.put(API_URL + 'auth/student/update-profile', data);
+    }
+
+    updateStaffInfo(id: number, name: string, email: string): Observable<any> {
+        return this.http.put(API_URL + `admin/staff/${id}/info`, { name, email });
     }
 }

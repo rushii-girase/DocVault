@@ -14,8 +14,10 @@ import { apiService } from '../../services/api.service';
 })
 export class AdminComponent implements OnInit {
     user: any;
-    activeTab = 'staff';
+    activeTab: string = 'staff';
+    isSidebarExpanded: boolean = false;
     auditLogs: any[] = [];
+    notifications: any[] = [];
     documents: any[] = [];
     staffMembers: any[] = [];
     students: any[] = [];
@@ -23,6 +25,7 @@ export class AdminComponent implements OnInit {
     selectedStudentView: any = null;
     searchQuery: string = '';
     documentSearchQuery: string = '';
+    showProfileDetails: boolean = false;
 
     staffForm: any = {
         name: '',
@@ -56,7 +59,12 @@ export class AdminComponent implements OnInit {
     }
 
     loadData() {
-        this.apiService.getAuditLogs().subscribe(res => this.auditLogs = res);
+        this.apiService.getAuditLogs().subscribe(res => {
+            this.auditLogs = res.sort((a: any, b: any) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime());
+        });
+        this.apiService.getNotifications().subscribe(res => {
+            this.notifications = res.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        });
         this.apiService.getStaff().subscribe(res => this.staffMembers = res);
         this.apiService.getStudents().subscribe(res => this.students = res);
         this.apiService.getAllDocuments().subscribe({
@@ -166,6 +174,43 @@ export class AdminComponent implements OnInit {
         }
     }
 
+    showEditStaffModal: boolean = false;
+    editStaffForm = { id: 0, name: '', email: '' };
+    editStaffMessage: string = '';
+
+    openEditStaffModal(staff: any) {
+        this.editStaffForm = { id: staff.id, name: staff.name, email: staff.email };
+        this.editStaffMessage = '';
+        this.showEditStaffModal = true;
+    }
+
+    closeEditStaffModal() {
+        this.showEditStaffModal = false;
+    }
+
+    saveStaffInfo() {
+        if (!this.editStaffForm.name.trim()) {
+            this.editStaffMessage = 'Name cannot be empty.';
+            return;
+        }
+        if (!this.editStaffForm.email.trim()) {
+            this.editStaffMessage = 'Email cannot be empty.';
+            return;
+        }
+        this.apiService.updateStaffInfo(this.editStaffForm.id, this.editStaffForm.name, this.editStaffForm.email).subscribe({
+            next: (res) => {
+                this.editStaffMessage = res.message;
+                setTimeout(() => {
+                    this.closeEditStaffModal();
+                    this.loadData();
+                }, 1500);
+            },
+            error: (err) => {
+                this.editStaffMessage = err.error?.message || 'Error updating info';
+            }
+        });
+    }
+
     download(id: number, filename: string) {
         this.apiService.downloadDocument(id).subscribe(blob => {
             const url = window.URL.createObjectURL(blob);
@@ -182,6 +227,44 @@ export class AdminComponent implements OnInit {
             const url = window.URL.createObjectURL(blob);
             window.open(url, '_blank');
         });
+    }
+
+    showRequestModal = false;
+    requestForm = { documentName: '', note: '' };
+    requestMessage = '';
+
+    openRequestModal(): void {
+        this.showRequestModal = true;
+        this.requestForm = { documentName: '', note: '' };
+        this.requestMessage = '';
+    }
+
+    closeRequestModal(): void {
+        this.showRequestModal = false;
+    }
+
+    closeRequestModalOutside(event: MouseEvent): void {
+        if ((event.target as HTMLElement).classList.contains('backdrop-bg')) {
+            this.closeRequestModal();
+        }
+    }
+
+    submitRequestAll(): void {
+        if (!this.requestForm.documentName) return;
+        this.apiService.requestCustomDocumentAll(this.requestForm.documentName, this.requestForm.note)
+            .subscribe({
+                next: (res) => {
+                    this.requestMessage = res.message;
+                    setTimeout(() => this.closeRequestModal(), 2000);
+                },
+                error: (err) => {
+                    this.requestMessage = err.error?.message || 'Error sending request';
+                }
+            });
+    }
+
+    markRead(id: number) {
+        this.apiService.markNotificationAsRead(id).subscribe(() => this.loadData());
     }
 
     logout() {

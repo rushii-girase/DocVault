@@ -13,13 +13,20 @@ import { apiService } from '../../services/api.service';
     styleUrl: '../admin/admin.component.scss' // Same base styling
 })
 export class StudentComponent implements OnInit {
-    user: any;
-    activeTab = 'my-documents';
+    user: any = null;
+    activeTab: string = 'my-documents';
+    isSidebarExpanded: boolean = false;
     documents: any[] = [];
     notifications: any[] = [];
+    showProfileDetails: boolean = false;
+    showEditModal: boolean = false;
+    editProfileForm: any = { classLevel: '', division: '', rollNo: '' };
+    classes = ['FE', 'SE', 'TE', 'BE'];
+    editProfileMessage: string = '';
 
     uploadForm: any = {
         title: '',
+        customTitle: '',
         file: null as File | null
     };
     uploadMessage = '';
@@ -73,12 +80,17 @@ export class StudentComponent implements OnInit {
         this.isUploading = true;
         const formData = new FormData();
         formData.append('file', this.uploadForm.file);
-        formData.append('title', this.uploadForm.title);
+        
+        let finalTitle = this.uploadForm.title;
+        if (finalTitle === 'CUSTOM') {
+            finalTitle = this.uploadForm.customTitle;
+        }
+        formData.append('title', finalTitle);
 
         this.apiService.uploadDocument(formData).subscribe({
             next: (res) => {
                 this.uploadMessage = 'Document uploaded successfully!';
-                this.uploadForm = { title: '', file: null };
+                this.uploadForm = { title: '', customTitle: '', file: null };
                 this.isUploading = false;
                 this.loadData(); // refresh list
             },
@@ -122,5 +134,35 @@ export class StudentComponent implements OnInit {
     logout() {
         this.authService.logout();
         this.router.navigate(['/login']);
+    }
+
+    openEditModal(): void {
+        const currentClassContent = this.user?.classLevel || '';
+        this.editProfileForm = { 
+            classLevel: currentClassContent === 'N/A' || !currentClassContent ? '' : currentClassContent, 
+            division: this.user?.division || '',
+            rollNo: this.user?.rollNo || ''
+        };
+        this.showEditModal = true;
+        this.showProfileDetails = false;
+        this.editProfileMessage = '';
+    }
+
+    closeEditModal(): void {
+        this.showEditModal = false;
+    }
+
+    submitProfileEdit(): void {
+        this.apiService.updateProfile(this.editProfileForm).subscribe({
+            next: (res) => {
+                this.authService.saveToken(res.token);
+                this.authService.saveUser(res);
+                this.user = this.authService.getUser();
+                this.closeEditModal();
+            },
+            error: (err) => {
+                this.editProfileMessage = err.error?.message || 'Failed to update profile. Please ensure inputs are valid.';
+            }
+        });
     }
 }

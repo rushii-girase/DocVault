@@ -13,13 +13,15 @@ import { apiService } from '../../services/api.service';
     styleUrl: '../admin/admin.component.scss' // Reusing admin dashboard styles implicitly by copy
 })
 export class StaffComponent implements OnInit {
-    user: any;
-    activeTab = 'students';
+    user: any = null;
+    activeTab: string = 'students';
+    isSidebarExpanded: boolean = false;
     documents: any[] = [];
     notifications: any[] = [];
     students: any[] = [];
     searchQuery: string = '';
     documentSearchQuery: string = '';
+    showProfileDetails: boolean = false;
 
     reviewModalOpen = false;
     selectedDoc: any = null;
@@ -55,7 +57,9 @@ export class StaffComponent implements OnInit {
     }
 
     loadNotifications() {
-        this.apiService.getNotifications().subscribe(res => this.notifications = res);
+        this.apiService.getNotifications().subscribe(res => {
+            this.notifications = res.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        });
     }
 
     getFilteredDocuments() {
@@ -157,6 +161,40 @@ export class StaffComponent implements OnInit {
                 this.reviewMessage = err.error?.message || 'Error publishing review';
             }
         });
+    }
+
+    showRequestModal = false;
+    requestForm = { documentName: '', note: '' };
+    requestMessage = '';
+
+    openRequestModal(): void {
+        this.showRequestModal = true;
+        this.requestForm = { documentName: '', note: '' };
+        this.requestMessage = '';
+    }
+
+    closeRequestModal(): void {
+        this.showRequestModal = false;
+    }
+
+    closeRequestModalOutside(event: MouseEvent): void {
+        if ((event.target as HTMLElement).classList.contains('backdrop-bg')) {
+            this.closeRequestModal();
+        }
+    }
+
+    submitRequestAll(): void {
+        if (!this.requestForm.documentName) return;
+        this.apiService.requestCustomDocumentAll(this.requestForm.documentName, this.requestForm.note)
+            .subscribe({
+                next: (res) => {
+                    this.requestMessage = res.message;
+                    setTimeout(() => this.closeRequestModal(), 2000);
+                },
+                error: (err) => {
+                    this.requestMessage = err.error?.message || 'Error sending request';
+                }
+            });
     }
 
     markRead(id: number) {
