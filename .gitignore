@@ -1,0 +1,19 @@
+# Node/Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Java/Backend
+backend/target/
+backend/*.jar
+backend/*.war
+
+# Local storage and folders
+backend/document_uploads/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+frontend/.vscode/
+backend/.idea/
